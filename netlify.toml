@@ -1,6 +1,9 @@
 [build]
   command = "npm run build"
-  publish = "build"
+  publish = ".netlify/functions-internal"
+
+[functions]
+  node_bundler = "esbuild"
 
 [dev]
   command = "npm run dev"
