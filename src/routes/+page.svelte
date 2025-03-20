@@ -6,6 +6,7 @@
   import Controls from '$lib/components/Controls.svelte';
   import ProgressBar from '$lib/components/ProgressBar.svelte';
   import type { BingoColumn } from '$lib/types';
+  import HelpMenu from '$lib/components/HelpMenu.svelte';
 
   // Constants for bingo numbers
   const COLUMNS: Record<string, BingoColumn> = {
@@ -21,6 +22,7 @@
   let manualNumber: number | null = currentNumber;
   let activePanel = 0; // 0 for grid, 1 for randomizer
   let touchStart = 0;
+  let showHelp = false;
 
   // Update store when state changes
   $: {
@@ -88,6 +90,10 @@
       if (diff > 0 && activePanel === 0) activePanel = 1;
       else if (diff < 0 && activePanel === 1) activePanel = 0;
     }
+  }
+
+  function openDonate() {
+    window.open('https://buymeacoffee.com/ethicka', '_blank');
   }
 </script>
 
@@ -197,6 +203,31 @@
     </div>
   </div>
 </div>
+
+<div class="fixed bottom-4 right-4 flex gap-2 z-20">
+  <button
+    class="bg-gray-800 text-white p-2 rounded-full shadow-lg hover:bg-gray-700"
+    on:click={() => showHelp = true}
+    aria-label="Help"
+  >
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+            d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  </button>
+
+  <button
+    class="bg-yellow-600 text-white p-2 rounded-full shadow-lg hover:bg-yellow-500"
+    on:click={openDonate}
+    aria-label="Buy me a coffee"
+  >
+    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4v-2z"/>
+    </svg>
+  </button>
+</div>
+
+<HelpMenu bind:isOpen={showHelp} />
 
 <style>
   /* Add any additional custom styles here */
