@@ -106,16 +106,17 @@
                      .filter(n => calledNumbers.includes(n))
                      .sort((a, b) => calledNumbers.indexOf(b) - calledNumbers.indexOf(a))
                 as number}
-                <div 
+                <button
                   class="aspect-square flex items-center justify-center text-4xl md:text-5xl 
-                         border-4 rounded-lg font-bold cursor-pointer
+                         border-4 rounded-lg font-bold w-full
                          {number === calledNumbers[calledNumbers.length - 1] ? 
                            'border-red-500 bg-red-500 text-white' : 
-                           'border-blue-500 bg-white text-black hover:bg-gray-100'}"
+                           'border-blue-500 bg-white text-black'}"
                   on:click={() => removeNumber(number)}
+                  aria-label={`Remove number ${number}`}
                 >
                   {number}
-                </div>
+                </button>
               {/each}
             </div>
           {/each}
@@ -182,9 +183,9 @@
             <div 
               class="bg-green-500 h-full transition-all duration-300 ease-out"
               style="width: {(calledNumbers.length / 75) * 100}%"
-            />
+            ></div>
           </div>
-          <div class="text-center text-3xl mt-4">
+          <div class="text-center text-xl mt-2">
             Called: {calledNumbers.length} / 75
           </div>
         </div>
