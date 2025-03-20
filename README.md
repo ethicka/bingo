@@ -1,38 +1,77 @@
-# sv
+# Bingo Caller
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A modern, responsive web application for calling Bingo numbers in a classroom or PTA setting. Built with SvelteKit and designed for display on large screens (4K TVs, projectors).
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+- **Split-Screen Layout**
+  - Left: Grid showing called numbers organized by B-I-N-G-O columns
+  - Right: Large number display with controls
+
+- **Number Calling**
+  - Random number generation
+  - Manual number entry
+  - Large, clear display of current number with column letter
+  - Progress tracking (called numbers / total)
+
+- **Game Management**
+  - Click any called number to remove it (with confirmation)
+  - Reset game functionality
+  - Auto-saves game state (persists through page refresh)
+  - Progress bar showing game completion
+
+- **Design**
+  - Clean, minimal interface
+  - Optimized for 4K displays
+  - Last called number highlighted in red
+  - Called numbers shown with blue borders
+  - Fully responsive layout
+
+## Usage
+
+1. **Starting a Game**
+   - Press "Random" for random number selection
+   - Or type a number (1-75) and press Enter or "Call"
+
+2. **Managing Numbers**
+   - Click any called number to remove it (useful for corrections)
+   - Use Reset button to start a new game
+   - Game state automatically saves in browser
+
+3. **Number Ranges**
+   - B: 1-15
+   - I: 16-30
+   - N: 31-45
+   - G: 46-60
+   - O: 61-75
+
+## Development
 
 ```bash
-# create a new project in the current directory
-npx sv create
+# Install dependencies
+npm install
 
-# create a new project in my-app
-npx sv create my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
+# Start development server
 npm run dev
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```bash
+# Build for production
 npm run build
+
+# Preview production build
+npm run preview
 ```
 
-You can preview the production build with `npm run preview`.
+## Technical Stack
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+- SvelteKit
+- Tailwind CSS v4
+- TypeScript
+- Local Storage for state persistence
+
+## Browser Support
+
+Works in all modern browsers with localStorage support. Not intended for mobile use (designed for large displays).
+
+## License
+
+MIT
