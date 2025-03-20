@@ -1,6 +1,6 @@
 # Bingo Caller
 
-A modern, responsive web application for calling Bingo numbers in a classroom or PTA setting. Built with SvelteKit and designed for display on large screens (4K TVs, projectors).
+A modern, responsive Bingo caller web app built with SvelteKit and Tailwind CSS, perfect for classrooms and PTA events with support for 4K displays and mobile devices.
 
 ## Features
 
@@ -61,16 +61,11 @@ npm run build
 npm run preview
 ```
 
-## Technical Stack
+## Support
 
-- SvelteKit
-- Tailwind CSS v4
-- TypeScript
-- Local Storage for state persistence
+If you find this tool useful, you can:
 
-## Browser Support
-
-Works in all modern browsers with localStorage support. Not intended for mobile use (designed for large displays).
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/ethicka)
 
 ## License
 
