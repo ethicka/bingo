@@ -81,6 +81,11 @@
   }
 </script>
 
+<svelte:head>
+  <title>Bingo Caller</title>
+  <meta name="description" content="A simple bingo caller for classrooms and PTA events">
+</svelte:head>
+
 <div class="h-screen bg-white p-2">
   <div class="h-full mx-auto flex flex-col lg:flex-row">
     <!-- Left side - Called numbers grid -->
