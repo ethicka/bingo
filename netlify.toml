@@ -8,11 +8,6 @@
   port = 5173
   targetPort = 5173
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
 [functions]
   node_bundler = "esbuild"
 
