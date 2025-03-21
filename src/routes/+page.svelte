@@ -168,9 +168,11 @@
 <div class="hidden lg:flex h-screen bg-white p-2">
   <div class="h-full mx-auto flex flex-row w-full">
     <!-- Left side - Grid -->
-    <div class="w-1/2 p-2">
-      <div class="h-full flex flex-col">
+    <div class="w-1/2 p-2 flex flex-col">
+      <div class="sticky top-2 bg-white z-10">
         <BingoHeader letters={Object.keys(COLUMNS)} />
+      </div>
+      <div class="flex-1 overflow-y-auto">
         <BingoGrid 
           columns={COLUMNS}
           calledNumbers={calledNumbers}
@@ -180,7 +182,7 @@
     </div>
 
     <!-- Right side - Randomizer -->
-    <div class="w-1/2 flex flex-col items-center justify-center p-2">
+    <div class="w-1/2 flex flex-col items-center justify-center p-2 sticky top-2">
       <NumberDisplay
         {currentNumber}
         bind:manualNumber
@@ -196,8 +198,6 @@
         isRandomDisabled={calledNumbers.length === 75}
       />
 
-      
-
       <ProgressBar
         current={calledNumbers.length}
         total={75}
@@ -206,7 +206,7 @@
   </div>
 </div>
 
-<div class="fixed bottom-4 right-4 flex gap-2 z-20">
+<!-- <div class="fixed bottom-4 right-4 flex gap-2 z-20">
   <button
     class="bg-gray-800 text-white p-2 rounded-full shadow-lg hover:bg-gray-700"
     on:click={() => showHelp = true}
@@ -227,7 +227,7 @@
       <path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4v-2z"/>
     </svg>
   </button>
-</div>
+</div> -->
 
 <HelpMenu bind:isOpen={showHelp} />
 
