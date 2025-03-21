@@ -4,9 +4,14 @@
   export let getColumnLetter: (n: number) => string;
   export let onEnter: () => void;
   
-  $: displayNumber = manualNumber && manualNumber >= 1 && manualNumber <= 75 
-    ? manualNumber 
-    : currentNumber;
+  $: displayNumber = manualNumber ?? currentNumber;
+
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      onEnter();
+    }
+  }
 </script>
 
 <input
@@ -16,7 +21,7 @@
   max="75"
   class="text-[20vh] sm:text-[30vh] lg:text-[40vh] w-full text-center bg-transparent focus:outline-none font-bold"
   placeholder="--"
-  on:keydown={(e) => e.key === 'Enter' && onEnter()}
+  on:keydown={handleKeydown}
 />
 
 {#if displayNumber}

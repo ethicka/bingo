@@ -19,7 +19,7 @@
 
   let calledNumbers: number[] = $bingoState.calledNumbers;
   let currentNumber: number | null = $bingoState.currentNumber;
-  let manualNumber: number | null = currentNumber;
+  let manualNumber: number | null = null;
   let activePanel = 0; // 0 for grid, 1 for randomizer
   let touchStart = 0;
   let showHelp = false;
@@ -126,7 +126,7 @@
       <div class="h-full flex flex-col items-center justify-center">
         <NumberDisplay
           {currentNumber}
-          {manualNumber}
+          bind:manualNumber
           {getColumnLetter}
           onEnter={handleManualNumber}
         />
@@ -183,7 +183,7 @@
     <div class="w-1/2 flex flex-col items-center justify-center p-2">
       <NumberDisplay
         {currentNumber}
-        {manualNumber}
+        bind:manualNumber
         {getColumnLetter}
         onEnter={handleManualNumber}
       />
@@ -195,6 +195,8 @@
         isCallDisabled={!manualNumber || manualNumber < 1 || manualNumber > 75 || calledNumbers.includes(manualNumber)}
         isRandomDisabled={calledNumbers.length === 75}
       />
+
+      
 
       <ProgressBar
         current={calledNumbers.length}
