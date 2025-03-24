@@ -1,10 +1,12 @@
 <script lang="ts">
   import { bingoState } from '$lib/stores';
+  import { onMount, onDestroy } from 'svelte';
   import BingoHeader from '$lib/components/BingoHeader.svelte';
   import BingoGrid from '$lib/components/BingoGrid.svelte';
   import NumberDisplay from '$lib/components/NumberDisplay.svelte';
   import Controls from '$lib/components/Controls.svelte';
   import ProgressBar from '$lib/components/ProgressBar.svelte';
+  import Settings from '$lib/components/Settings.svelte';
   import type { BingoColumn } from '$lib/types';
   import HelpMenu from '$lib/components/HelpMenu.svelte';
 
@@ -19,10 +21,18 @@
 
   let calledNumbers: number[] = $bingoState.calledNumbers;
   let currentNumber: number | null = $bingoState.currentNumber;
-  let manualNumber: number | null = null;
   let activePanel = 0; // 0 for grid, 1 for randomizer
   let touchStart = 0;
+  let showSettings = false;
+  let timerSeconds = 10;
+  let autoMode = false;
+  let timerInterval: NodeJS.Timeout | null = null;
   let showHelp = false;
+
+  // Game control functions
+  const onRandom = () => callRandomNumber();
+  const onReset = () => resetGame();
+  const isRandomDisabled = calledNumbers.length === 75;
 
   // Update store when state changes
   $: {
@@ -47,15 +57,6 @@
       const randomIndex = Math.floor(Math.random() * availableNumbers.length);
       currentNumber = availableNumbers[randomIndex];
       calledNumbers = [...calledNumbers, currentNumber];
-      manualNumber = currentNumber;
-    }
-  }
-
-  function handleManualNumber() {
-    if (manualNumber && manualNumber >= 1 && manualNumber <= 75 && !calledNumbers.includes(manualNumber)) {
-      currentNumber = manualNumber;
-      calledNumbers = [...calledNumbers, manualNumber];
-      manualNumber = null;
     }
   }
 
@@ -63,7 +64,7 @@
     if (confirm('Are you sure you want to reset the game?')) {
       calledNumbers = [];
       currentNumber = null;
-      manualNumber = null;
+      stopAutoMode();
     }
   }
 
@@ -72,8 +73,46 @@
       calledNumbers = calledNumbers.filter(n => n !== number);
       if (currentNumber === number) {
         currentNumber = null;
-        manualNumber = null;
       }
+    }
+  }
+
+  // Auto mode functions
+  function startAutoMode() {
+    if (timerInterval) return;
+    timerInterval = setInterval(callRandomNumber, timerSeconds * 1000);
+  }
+
+  function stopAutoMode() {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+    autoMode = false;
+  }
+
+  function handleTimerChange(seconds: number) {
+    timerSeconds = seconds;
+    if (autoMode) {
+      stopAutoMode();
+      startAutoMode();
+    }
+  }
+
+  function handleAutoModeChange(enabled: boolean) {
+    autoMode = enabled;
+    if (enabled) {
+      startAutoMode();
+    } else {
+      stopAutoMode();
+    }
+  }
+
+  // Keyboard handler
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.code === 'Space' && !autoMode) {
+      event.preventDefault();
+      callRandomNumber();
     }
   }
 
@@ -93,8 +132,24 @@
   }
 
   function openDonate() {
-    window.open('https://buymeacoffee.com/ethicka', '_blank');
+    if (typeof window !== 'undefined') {
+      window.open('https://buymeacoffee.com/ethicka', '_blank');
+    }
   }
+
+  // Lifecycle
+  onMount(() => {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('keydown', handleKeydown);
+    }
+  });
+
+  onDestroy(() => {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('keydown', handleKeydown);
+      stopAutoMode();
+    }
+  });
 </script>
 
 <svelte:head>
@@ -125,18 +180,14 @@
          style="transform: translateX({activePanel === 1 ? '0' : '100%'})">
       <div class="h-full flex flex-col items-center justify-center">
         <NumberDisplay
-          {currentNumber}
-          bind:manualNumber
+          number={currentNumber}
           {getColumnLetter}
-          onEnter={handleManualNumber}
         />
 
         <Controls
-          onRandom={callRandomNumber}
-          onCall={handleManualNumber}
-          onReset={resetGame}
-          isCallDisabled={!manualNumber || manualNumber < 1 || manualNumber > 75 || calledNumbers.includes(manualNumber)}
-          isRandomDisabled={calledNumbers.length === 75}
+          {onRandom}
+          {onReset}
+          {isRandomDisabled}
         />
 
         <ProgressBar
@@ -184,18 +235,14 @@
     <!-- Right side - Randomizer -->
     <div class="w-1/2 flex flex-col items-center justify-center p-2 sticky top-2">
       <NumberDisplay
-        {currentNumber}
-        bind:manualNumber
+        number={currentNumber}
         {getColumnLetter}
-        onEnter={handleManualNumber}
       />
 
       <Controls
-        onRandom={callRandomNumber}
-        onCall={handleManualNumber}
-        onReset={resetGame}
-        isCallDisabled={!manualNumber || manualNumber < 1 || manualNumber > 75 || calledNumbers.includes(manualNumber)}
-        isRandomDisabled={calledNumbers.length === 75}
+        {onRandom}
+        {onReset}
+        {isRandomDisabled}
       />
 
       <ProgressBar
@@ -206,30 +253,31 @@
   </div>
 </div>
 
-<!-- <div class="fixed bottom-4 right-4 flex gap-2 z-20">
+<!-- Settings Button -->
+<div class="fixed bottom-4 right-4 z-20">
   <button
     class="bg-gray-800 text-white p-2 rounded-full shadow-lg hover:bg-gray-700"
-    on:click={() => showHelp = true}
-    aria-label="Help"
+    on:click={() => showSettings = true}
+    aria-label="Settings"
   >
     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-            d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
     </svg>
   </button>
-
-  <button
-    class="bg-yellow-600 text-white p-2 rounded-full shadow-lg hover:bg-yellow-500"
-    on:click={openDonate}
-    aria-label="Buy me a coffee"
-  >
-    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4v-2z"/>
-    </svg>
-  </button>
-</div> -->
+</div>
 
 <HelpMenu bind:isOpen={showHelp} />
+
+<Settings
+  bind:isOpen={showSettings}
+  bind:timerSeconds
+  bind:autoMode
+  onClose={() => showSettings = false}
+  onTimerChange={handleTimerChange}
+  onAutoModeChange={handleAutoModeChange}
+/>
 
 <style>
   /* Add any additional custom styles here */

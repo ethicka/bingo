@@ -37,6 +37,16 @@
       showWalkthrough = false;
     }
   }
+
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      if (showWalkthrough) {
+        showWalkthrough = false;
+      } else if (isOpen) {
+        isOpen = false;
+      }
+    }
+  }
 </script>
 
 {#if isOpen}
@@ -45,7 +55,7 @@
     role="dialog"
     aria-modal="true"
     on:click={() => isOpen = false}
-    on:keydown={e => e.key === 'Escape' && (isOpen = false)}
+    on:keydown={handleKeydown}
     tabindex="-1"
     transition:fade
   >
@@ -53,12 +63,12 @@
       class="absolute bottom-16 left-4 w-80 bg-white rounded-xl p-4 shadow-lg"
       role="document"
       on:click|stopPropagation
-      transition:fly={{ y: 50 }}
     >
       <h2 class="text-2xl font-bold mb-4">Help & Information</h2>
       
       <div class="space-y-4">
         <button
+          type="button"
           class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg"
           on:click={startWalkthrough}
         >
@@ -82,7 +92,6 @@
         <div class="space-y-2">
           <h3 class="font-bold">Keyboard Shortcuts</h3>
           <div class="text-sm">
-            <p>Enter: Call typed number</p>
             <p>Space: Random number</p>
             <p>Esc: Close menus</p>
           </div>
@@ -97,7 +106,7 @@
     class="fixed inset-0 bg-black bg-opacity-50 z-50"
     role="dialog"
     aria-modal="true"
-    on:keydown={e => e.key === 'Escape' && (showWalkthrough = false)}
+    on:keydown={handleKeydown}
     tabindex="-1"
     transition:fade
   >
@@ -106,11 +115,11 @@
              bg-white rounded-xl p-6 shadow-lg max-w-md w-full mx-4"
       role="document"
       on:click|stopPropagation
-      transition:fly={{ y: 50 }}
     >
       <h3 class="text-xl font-bold mb-2">{walkSteps[walkStep].title}</h3>
       <p class="mb-4">{walkSteps[walkStep].text}</p>
       <button
+        type="button"
         class="bg-blue-500 text-white px-4 py-2 rounded-lg"
         on:click={nextStep}
       >
