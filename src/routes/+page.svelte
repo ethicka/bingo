@@ -4,11 +4,13 @@
   import BingoHeader from '$lib/components/BingoHeader.svelte';
   import BingoGrid from '$lib/components/BingoGrid.svelte';
   import NumberDisplay from '$lib/components/NumberDisplay.svelte';
-  import Controls from '$lib/components/Controls.svelte';
   import ProgressBar from '$lib/components/ProgressBar.svelte';
   import Settings from '$lib/components/Settings.svelte';
   import type { BingoColumn } from '$lib/types';
   import HelpMenu from '$lib/components/HelpMenu.svelte';
+  import TimerIndicator from '$lib/components/TimerIndicator.svelte';
+  import BingoPattern from '$lib/components/BingoPattern.svelte';
+  import KeyboardShortcuts from '$lib/components/KeyboardShortcuts.svelte';
 
   // Constants for bingo numbers
   const COLUMNS: Record<string, BingoColumn> = {
@@ -24,10 +26,16 @@
   let activePanel = 0; // 0 for grid, 1 for randomizer
   let touchStart = 0;
   let showSettings = false;
+  let showKeyboardShortcuts = false;
   let timerSeconds = 10;
   let autoMode = false;
   let timerInterval: NodeJS.Timeout | null = null;
   let showHelp = false;
+  let isGameStarted = false;
+  let currentPattern: boolean[][] | null = null;
+  let isPaused = false;
+  let showBingo = false;
+  let showTimer = true;
 
   // Game control functions
   const onRandom = () => callRandomNumber();
@@ -57,6 +65,7 @@
       const randomIndex = Math.floor(Math.random() * availableNumbers.length);
       currentNumber = availableNumbers[randomIndex];
       calledNumbers = [...calledNumbers, currentNumber];
+      isGameStarted = true;
     }
   }
 
@@ -65,6 +74,7 @@
       calledNumbers = [];
       currentNumber = null;
       stopAutoMode();
+      isGameStarted = false;
     }
   }
 
@@ -80,7 +90,17 @@
   // Auto mode functions
   function startAutoMode() {
     if (timerInterval) return;
-    timerInterval = setInterval(callRandomNumber, timerSeconds * 1000);
+    if (!isPaused) {
+      // Reset the timer component
+      const timerEvent = new CustomEvent('timer-reset');
+      window.dispatchEvent(timerEvent);
+      // Start the interval
+      timerInterval = setInterval(() => {
+        callRandomNumber();
+        // Reset the timer component after each call
+        window.dispatchEvent(timerEvent);
+      }, timerSeconds * 1000);
+    }
   }
 
   function stopAutoMode() {
@@ -89,11 +109,12 @@
       timerInterval = null;
     }
     autoMode = false;
+    isPaused = false;
   }
 
   function handleTimerChange(seconds: number) {
     timerSeconds = seconds;
-    if (autoMode) {
+    if (autoMode && !isPaused) {
       stopAutoMode();
       startAutoMode();
     }
@@ -102,10 +123,47 @@
   function handleAutoModeChange(enabled: boolean) {
     autoMode = enabled;
     if (enabled) {
-      startAutoMode();
+      if (!isGameStarted) {
+        // Call first number immediately when enabling auto mode
+        callRandomNumber();
+      }
+      if (!isPaused) {
+        startAutoMode();
+      }
     } else {
       stopAutoMode();
     }
+  }
+
+  function handlePatternSelect(pattern: boolean[][] | null) {
+    currentPattern = pattern;
+  }
+
+  function handleBingoChange(enabled: boolean) {
+    showBingo = enabled;
+  }
+
+  function handlePauseChange(paused: boolean) {
+    isPaused = paused;
+    if (autoMode) {
+      if (paused) {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+      } else {
+        startAutoMode();
+      }
+    }
+  }
+
+  function togglePause() {
+    isPaused = !isPaused;
+    handlePauseChange(isPaused);
+  }
+
+  function handleTimerVisibilityChange(visible: boolean) {
+    showTimer = visible;
   }
 
   // Keyboard handler
@@ -113,6 +171,25 @@
     if (event.code === 'Space' && !autoMode) {
       event.preventDefault();
       callRandomNumber();
+    } else if (event.code === 'KeyP') {
+      event.preventDefault();
+      togglePause();
+    } else if (event.code === 'KeyR') {
+      event.preventDefault();
+      resetGame();
+    } else if (event.code === 'KeyA') {
+      event.preventDefault();
+      handleAutoModeChange(!autoMode);
+    } else if (event.code === 'Slash') {
+      event.preventDefault();
+      showKeyboardShortcuts = true;
+    } else if (event.code === 'Escape') {
+      if (showSettings) {
+        showSettings = false;
+      }
+      if (showKeyboardShortcuts) {
+        showKeyboardShortcuts = false;
+      }
     }
   }
 
@@ -157,15 +234,24 @@
   <meta name="description" content="A simple bingo caller for classrooms and PTA events">
 </svelte:head>
 
+<TimerIndicator 
+  isActive={isGameStarted} 
+  {timerSeconds} 
+  isAutoMode={autoMode}
+  {isPaused}
+  onPauseClick={togglePause}
+  {showTimer}
+/>
+
 <!-- Mobile View -->
-<div class="lg:hidden h-screen bg-white p-2 overflow-hidden"
+<div class="h-screen p-2 overflow-hidden bg-white lg:hidden"
      on:touchstart={handleTouchStart}
      on:touchend={handleTouchEnd}>
-  <div class="h-full relative">
+  <div class="relative h-full">
     <!-- Grid Panel -->
     <div class="absolute inset-0 w-full transition-transform duration-300 ease-in-out"
          style="transform: translateX({activePanel === 0 ? '0' : '-100%'})">
-      <div class="h-full flex flex-col">
+      <div class="flex flex-col h-full">
         <BingoHeader letters={Object.keys(COLUMNS)} />
         <BingoGrid 
           columns={COLUMNS}
@@ -178,28 +264,39 @@
     <!-- Randomizer Panel -->
     <div class="absolute inset-0 w-full transition-transform duration-300 ease-in-out"
          style="transform: translateX({activePanel === 1 ? '0' : '100%'})">
-      <div class="h-full flex flex-col items-center justify-center">
-        <NumberDisplay
-          number={currentNumber}
-          {getColumnLetter}
-        />
+      <div class="flex flex-col items-center h-full">
+        <div class="flex flex-col justify-center flex-1 w-full max-w-xl mx-auto">
+          <div class="w-full min-w-[300px] flex justify-center">
+            <NumberDisplay
+              number={currentNumber}
+              {getColumnLetter}
+              onNumberClick={callRandomNumber}
+              isAutoMode={autoMode}
+            />
+          </div>
 
-        <Controls
-          {onRandom}
-          {onReset}
-          {isRandomDisabled}
-        />
+          {#if currentPattern}
+            <div class="flex justify-center mt-8">
+              <div class="transform scale-125">
+                <BingoPattern pattern={currentPattern} size="lg" {showBingo} />
+              </div>
+            </div>
+          {/if}
+        </div>
 
-        <ProgressBar
-          current={calledNumbers.length}
-          total={75}
-        />
+
+        <div class="w-full mb-12">
+          <ProgressBar
+            current={calledNumbers.length}
+            total={75}
+          />
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Navigation Dots -->
-  <div class="fixed bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
+  <div class="fixed left-0 right-0 z-10 flex justify-center gap-2 bottom-4">
     <button
       class="w-3 h-3 rounded-full transition-colors duration-200 
              {activePanel === 0 ? 'bg-blue-500' : 'bg-gray-300'}"
@@ -216,11 +313,11 @@
 </div>
 
 <!-- Desktop View -->
-<div class="hidden lg:flex h-screen bg-white p-2">
-  <div class="h-full mx-auto flex flex-row w-full">
+<div class="hidden h-screen p-2 bg-white lg:flex">
+  <div class="flex flex-row w-full h-full mx-auto">
     <!-- Left side - Grid -->
-    <div class="w-1/2 p-2 flex flex-col">
-      <div class="sticky top-2 bg-white z-10">
+    <div class="flex flex-col w-1/2 p-2">
+      <div class="sticky z-10 bg-white top-2">
         <BingoHeader letters={Object.keys(COLUMNS)} />
       </div>
       <div class="flex-1 overflow-y-auto">
@@ -233,30 +330,40 @@
     </div>
 
     <!-- Right side - Randomizer -->
-    <div class="w-1/2 flex flex-col items-center justify-center p-2 sticky top-2">
-      <NumberDisplay
-        number={currentNumber}
-        {getColumnLetter}
-      />
+    <div class="sticky flex flex-col items-center w-1/2 h-full p-2 top-2">
+      <div class="flex flex-col justify-center flex-1 w-full max-w-xl mx-auto">
+        <div class="w-full min-w-[300px] flex justify-center">
+          <NumberDisplay
+            number={currentNumber}
+            {getColumnLetter}
+            onNumberClick={callRandomNumber}
+            isAutoMode={autoMode}
+          />
+        </div>
 
-      <Controls
-        {onRandom}
-        {onReset}
-        {isRandomDisabled}
-      />
+        {#if currentPattern}
+          <div class="flex justify-center mt-8">
+            <div class="transform scale-125">
+              <BingoPattern pattern={currentPattern} size="lg" {showBingo} />
+            </div>
+          </div>
+        {/if}
+      </div>
 
-      <ProgressBar
-        current={calledNumbers.length}
-        total={75}
-      />
+      <div class="w-[80%] mb-16">
+        <ProgressBar
+          current={calledNumbers.length}
+          total={75}
+        />
+      </div>
     </div>
   </div>
 </div>
 
 <!-- Settings Button -->
-<div class="fixed bottom-4 right-4 z-20">
+<div class="fixed z-20 bottom-4 right-4">
   <button
-    class="bg-gray-800 text-white p-2 rounded-full shadow-lg hover:bg-gray-700"
+    class="p-2 text-white bg-gray-800 rounded-full shadow-lg hover:bg-gray-700"
     on:click={() => showSettings = true}
     aria-label="Settings"
   >
@@ -270,13 +377,26 @@
 
 <HelpMenu bind:isOpen={showHelp} />
 
+<KeyboardShortcuts
+  bind:isOpen={showKeyboardShortcuts}
+  onClose={() => showKeyboardShortcuts = false}
+/>
+
 <Settings
   bind:isOpen={showSettings}
   bind:timerSeconds
   bind:autoMode
+  bind:isPaused
+  bind:showBingo
+  bind:showTimer
   onClose={() => showSettings = false}
   onTimerChange={handleTimerChange}
   onAutoModeChange={handleAutoModeChange}
+  onPatternSelect={handlePatternSelect}
+  onPauseChange={handlePauseChange}
+  onBingoChange={handleBingoChange}
+  onTimerVisibilityChange={handleTimerVisibilityChange}
+  onReset={resetGame}
 />
 
 <style>

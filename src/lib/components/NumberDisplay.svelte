@@ -1,16 +1,31 @@
 <script lang="ts">
   export let number: number | null;
-  export let getColumnLetter: (n: number) => string;
+  export let getColumnLetter: (number: number) => string;
+  export let onNumberClick: () => void;
+  export let isAutoMode: boolean;
+
+  $: letter = number ? getColumnLetter(number) : '';
+  $: displayNumber = number ? `${letter}-${number}` : '';
+  $: fontSize = displayNumber.length > 3 ? 'text-[12rem]' : 'text-[14rem]';
 </script>
 
-<div class="text-center mb-8">
+<div class="flex justify-center items-center h-full">
   {#if number}
-    <div class="text-[15vh] md:text-[20vh] lg:text-[25vh] font-bold mb-2 leading-none">
-      {getColumnLetter(number)}-{number}
-    </div>
+    <button
+      on:click={onNumberClick}
+      disabled={isAutoMode}
+      class="font-bold text-center whitespace-nowrap {fontSize} leading-none transition-opacity
+             hover:opacity-80 focus:outline-none disabled:cursor-default disabled:hover:opacity-100"
+    >
+      {displayNumber}
+    </button>
   {:else}
-    <div class="text-[15vh] md:text-[20vh] lg:text-[25vh] font-bold mb-2 text-gray-300 leading-none">
-      ?-?
+    <div class="text-4xl text-gray-400">
+      Press Space to Start
     </div>
   {/if}
-</div> 
+</div>
+
+<style>
+  /* Add any custom styles here */
+</style> 

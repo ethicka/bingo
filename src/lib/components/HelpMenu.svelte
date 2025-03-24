@@ -51,7 +51,7 @@
 
 {#if isOpen}
   <div
-    class="fixed inset-0 bg-black bg-opacity-50 z-50"
+    class="fixed inset-0 z-50 bg-black/50"
     role="dialog"
     aria-modal="true"
     on:click={() => isOpen = false}
@@ -60,16 +60,16 @@
     transition:fade
   >
     <div
-      class="absolute bottom-16 left-4 w-80 bg-white rounded-xl p-4 shadow-lg"
+      class="absolute p-4 bg-white shadow-lg bottom-16 left-4 w-80 rounded-xl"
       role="document"
       on:click|stopPropagation
     >
-      <h2 class="text-2xl font-bold mb-4">Help & Information</h2>
+      <h2 class="mb-4 text-2xl font-bold">Help & Information</h2>
       
       <div class="space-y-4">
         <button
           type="button"
-          class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg"
+          class="w-full px-4 py-2 text-white bg-blue-500 rounded-lg"
           on:click={startWalkthrough}
         >
           Start Walkthrough
@@ -103,7 +103,7 @@
 
 {#if showWalkthrough}
   <div
-    class="fixed inset-0 bg-black bg-opacity-50 z-50"
+    class="fixed inset-0 z-50 bg-black/50"
     role="dialog"
     aria-modal="true"
     on:keydown={handleKeydown}
@@ -111,16 +111,15 @@
     transition:fade
   >
     <div
-      class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2
-             bg-white rounded-xl p-6 shadow-lg max-w-md w-full mx-4"
+      class="absolute w-full max-w-md p-6 mx-4 transform -translate-x-1/2 -translate-y-1/2 bg-white shadow-lg top-1/2 left-1/2 rounded-xl"
       role="document"
       on:click|stopPropagation
     >
-      <h3 class="text-xl font-bold mb-2">{walkSteps[walkStep].title}</h3>
+      <h3 class="mb-2 text-xl font-bold">{walkSteps[walkStep].title}</h3>
       <p class="mb-4">{walkSteps[walkStep].text}</p>
       <button
         type="button"
-        class="bg-blue-500 text-white px-4 py-2 rounded-lg"
+        class="px-4 py-2 text-white bg-blue-500 rounded-lg"
         on:click={nextStep}
       >
         {walkStep < walkSteps.length - 1 ? 'Next' : 'Finish'}
